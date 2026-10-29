@@ -1,0 +1,10 @@
+{
+  "name": "MyMoney Tracker",
+  "short_name": "MyMoney",
+  "description": "A simple personal income and expense tracker for managing income, expenses, budgets and reports.",
+  "start_url": "/mymoney-tracker/",
+  "scope": "/mymoney-tracker/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb"
+}
