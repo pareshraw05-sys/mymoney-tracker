@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>MyMoney Tracker</title>
+  <meta name="theme-color" content="#0f766e" />
+
+  <!-- Tailwind CSS & Icons CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body { -webkit-tap-highlight-color: transparent; }
+    ::-webkit-scrollbar { display: none; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen pb-24">
+
+  <!-- Header -->
+  <header class="bg-teal-700 text-white p-4 sticky top-0 z-30 shadow-md">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-2">
+        <div class="w-8 h-8 rounded-full bg-teal-600 flex items-center justify-center text-teal-100">
+          <i class="fa-solid fa-wallet"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold">MyMoney Tracker</h1>
+          <p class="text-[11px] text-teal-200" id="headerMonthText">Overview</p>
+        </div>
+      </div>
+      <button onclick="openModal()" class="bg-teal-500 hover:bg-teal-400 active:scale-95 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow flex items-center">
+        <i class="fa-solid fa-plus mr-1"></i> Add
+      </button>
+    </div>
+  </header>
+
+  <!-- Main View Area -->
+  <main class="max-w-md mx-auto px-4 py-4 space-y-4">
+
+    <!-- 1. DASHBOARD TAB -->
+    <div id="tab-dashboard" class="space-y-4">
+      <!-- Balance Card -->
+      <div class="bg-gradient-to-br from-teal-800 to-teal-600 text-white rounded-2xl p-4 shadow-md">
+        <span class="text-xs text-teal-200 uppercase font-semibold">Net Balance</span>
+        <h2 class="text-3xl font-extrabold mt-1" id="dashTotalBalance">₹0.00</h2>
+        <div class="grid grid-cols-2 gap-2 mt-4 pt-3 border-t border-teal-500/50">
+          <div>
+            <span class="text-[11px] text-teal-200 block">Today's Income</span>
+            <span class="text-sm font-bold text-emerald-200" id="dashTodayIncome">₹0.00</span>
+          </div>
+          <div>
+            <span class="text-[11px] text-teal-200 block">Today's Expense</span>
+            <span class="text-sm font-bold text-rose-200" id="dashTodayExpense">₹0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Month Savings Card -->
+      <div class="bg-white rounded-xl p-3 shadow-sm border border-slate-100 flex items-center justify-between">
+        <div>
+          <span class="text-xs text-slate-500 font-medium">This Month's Savings</span>
+          <h3 class="text-lg font-bold text-slate-800" id="dashMonthSavings">₹0.00</h3>
+        </div>
+        <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+          <i class="fa-solid fa-piggy-bank"></i>
+        </div>
+      </div>
+
+      <!-- Budget Progress Alert -->
+      <div class="bg-white rounded-xl p-3 shadow-sm border border-slate-100 space-y-1.5">
+        <div class="flex justify-between text-xs font-semibold">
+          <span class="text-slate-600">Monthly Budget</span>
+          <span id="budgetPctText" class="text-teal-700">0%</span>
+        </div>
+        <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+          <div id="budgetBar" class="h-2 bg-teal-600 rounded-full transition-all" style="width:0%"></div>
+        </div>
+        <div class="flex justify-between text-[11px] text-slate-400">
+          <span>Spent: <b class="text-slate-700" id="budgetSpent">₹0</b></span>
+          <span>Limit: <b class="text-slate-700" id="budgetTotal">₹0</b></span>
+        </div>
+        <div id="budgetWarning" class="hidden text-xs py-1 px-2 rounded bg-amber-50 text-amber-800 mt-1 font-medium"></div>
+      </div>
+
+      <!-- Recent Transactions -->
+      <div class="space-y-2">
+        <div class="flex justify-between items-center">
+          <h3 class="text-xs font-bold text-slate-600 uppercase tracking-wider">Recent Transactions</h3>
+          <button onclick="switchTab('transactions')" class="text-xs text-teal-700 font-bold">See All</button>
+        </div>
+        <div id="dashRecentList" class="space-y-2"></div>
+      </div>
+    </div>
+
+    <!-- 2. TRANSACTIONS TAB -->
+    <div id="tab-transactions" class="space-y-3 hidden">
+      <div class="bg-white rounded-xl p-3 border border-slate-100 space-y-2">
+        <input type="text" id="filterSearch" placeholder="Search notes or amounts..." class="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg outline-none" oninput="renderTransactionsList()" />
+        <div class="grid grid-cols-2 gap-2">
+          <select id="filterCategory" class="text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg" onchange="renderTransactionsList()"></select>
+          <input type="date" id="filterDate" class="text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg" onchange="renderTransactionsList()" />
+        </div>
+      </div>
+      <div id="fullTransactionsList" class="space-y-2"></div>
+    </div>
+
+    <!-- 3. REPORTS TAB -->
+    <div id="tab-reports" class="space-y-3 hidden">
+      <div class="flex bg-slate-200 p-1 rounded-xl">
+        <button onclick="setReportPeriod('daily')" id="btn-period-daily" class="flex-1 py-1 text-xs font-bold rounded-lg text-slate-600">Daily</button>
+        <button onclick="setReportPeriod('monthly')" id="btn-period-monthly" class="flex-1 py-1 text-xs font-bold rounded-lg bg-white text-teal-800 shadow">Monthly</button>
+        <button onclick="setReportPeriod('yearly')" id="btn-period-yearly" class="flex-1 py-1 text-xs font-bold rounded-lg text-slate-600">Yearly</button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2">
+        <div class="bg-emerald-50 border border-emerald-100 p-3 rounded-xl">
+          <span class="text-[11px] text-emerald-700 font-medium">Income</span>
+          <p class="text-base font-bold text-emerald-800" id="reportIncomeTotal">₹0.00</p>
+        </div>
+        <div class="bg-rose-50 border border-rose-100 p-3 rounded-xl">
+          <span class="text-[11px] text-rose-700 font-medium">Expense</span>
+          <p class="text-base font-bold text-rose-800" id="reportExpenseTotal">₹0.00</p>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-3 border border-slate-100">
+        <h4 class="text-xs font-bold text-slate-500 mb-2">Category Spending Breakdown</h4>
+        <div class="relative h-48 w-full flex items-center justify-center">
+          <canvas id="categoryChart"></canvas>
+          <span id="chartEmpty" class="text-xs text-slate-400 hidden">No expense records found.</span>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-3 border border-slate-100">
+        <h4 class="text-xs font-bold text-slate-500 mb-2">Annual Trend</h4>
+        <div class="relative h-48 w-full">
+          <canvas id="monthlyTrendChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. SETTINGS TAB -->
+    <div id="tab-settings" class="space-y-3 hidden">
+      <!-- Budget Input -->
+      <div class="bg-white rounded-xl p-3 border border-slate-100 space-y-2">
+        <h3 class="text-xs font-bold text-slate-700">Set Monthly Budget (₹)</h3>
+        <div class="flex gap-2">
+          <input type="number" id="settingBudgetInput" class="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg outline-none" />
+          <button onclick="saveBudget()" class="bg-teal-700 text-white px-4 py-2 rounded-lg text-xs font-bold">Save</button>
+        </div>
+      </div>
+
+      <!-- Add Custom Category -->
+      <div class="bg-white rounded-xl p-3 border border-slate-100 space-y-2">
+        <h3 class="text-xs font-bold text-slate-700">Add Custom Category</h3>
+        <div class="flex gap-2">
+          <input type="text" id="customCatInput" placeholder="e.g. Snacks, EMI" class="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg outline-none" />
+          <button onclick="addCustomCategory()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-xs font-bold">Add</button>
+        </div>
+        <div id="categoryTags" class="flex flex-wrap gap-1 pt-1"></div>
+      </div>
+
+      <!-- Export Data -->
+      <div class="bg-white rounded-xl p-3 border border-slate-100 space-y-2">
+        <h3 class="text-xs font-bold text-slate-700">Backup & Reset</h3>
+        <button onclick="exportCSV()" class="w-full text-left p-2.5 bg-slate-50 rounded-lg text-xs font-semibold border flex justify-between items-center text-slate-700">
+          <span><i class="fa-solid fa-file-csv text-emerald-600 mr-2"></i> Export to CSV</span>
+          <i class="fa-solid fa-download text-slate-400"></i>
+        </button>
+        <button onclick="resetAllData()" class="w-full text-left p-2.5 bg-rose-50 rounded-lg text-xs font-semibold border border-rose-100 flex justify-between items-center text-rose-700">
+          <span><i class="fa-solid fa-trash mr-2"></i> Erase All Data</span>
+          <i class="fa-solid fa-arrow-right text-rose-400"></i>
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation -->
+  <nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 max-w-md mx-auto flex justify-around py-2">
+    <button onclick="switchTab('dashboard')" id="nav-dashboard" class="text-teal-700 text-center w-1/4">
+      <i class="fa-solid fa-house text-base"></i><span class="block text-[10px] mt-0.5">Home</span>
+    </button>
+    <button onclick="switchTab('transactions')" id="nav-transactions" class="text-slate-400 text-center w-1/4">
+      <i class="fa-solid fa-list-check text-base"></i><span class="block text-[10px] mt-0.5">History</span>
+    </button>
+    <button onclick="switchTab('reports')" id="nav-reports" class="text-slate-400 text-center w-1/4">
+      <i class="fa-solid fa-chart-pie text-base"></i><span class="block text-[10px] mt-0.5">Reports</span>
+    </button>
+    <button onclick="switchTab('settings')" id="nav-settings" class="text-slate-400 text-center w-1/4">
+      <i class="fa-solid fa-gear text-base"></i><span class="block text-[10px] mt-0.5">Settings</span>
+    </button>
+  </nav>
+
+  <!-- Add / Edit Modal -->
+  <div id="txModal" class="fixed inset-0 bg-black/50 z-50 flex items-end justify-center hidden">
+    <div class="bg-white w-full max-w-md rounded-t-2xl p-5 space-y-3">
+      <div class="flex justify-between items-center border-b pb-2">
+        <h3 class="font-bold text-sm" id="modalTitle">New Record</h3>
+        <button onclick="closeModal()" class="text-slate-400 text-lg"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <form onsubmit="handleFormSubmit(event)" class="space-y-3">
+        <input type="hidden" id="editTxId" />
+        <div class="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-lg">
+          <button type="button" id="typeExp" onclick="setFormType('expense')" class="py-1.5 rounded-md text-xs font-bold bg-white text-rose-600 shadow">Expense</button>
+          <button type="button" id="typeInc" onclick="setFormType('income')" class="py-1.5 rounded-md text-xs font-bold text-slate-600">Income</button>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-semibold text-slate-500">Amount (₹)</label>
+          <input type="number" step="0.01" id="txAmount" required class="w-full text-base font-bold p-2 bg-slate-50 border rounded-lg outline-none" placeholder="0.00" />
+        </div>
+
+        <div>
+          <label class="text-[11px] font-semibold text-slate-500">Category</label>
+          <select id="txCategory" required class="w-full text-xs p-2 bg-slate-50 border rounded-lg outline-none"></select>
+        </div>
+
+        <div>
+          <label class="text-[11px] font-semibold text-slate-500">Date</label>
+          <input type="date" id="txDate" required class="w-full text-xs p-2 bg-slate-50 border rounded-lg outline-none" />
+        </div>
+
+        <div>
+          <label class="text-[11px] font-semibold text-slate-500">Description / Note</label>
+          <input type="text" id="txNote" placeholder="e.g. Dinner, Fuel" class="w-full text-xs p-2 bg-slate-50 border rounded-lg outline-none" />
+        </div>
+
+        <button type="submit" class="w-full py-2.5 bg-teal-700 text-white rounded-lg font-bold text-xs shadow mt-2">Save</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_CATS = ['Grocery', 'Milk', 'Vegetables', 'Petrol', 'Diesel', 'Electricity', 'Water', 'Mobile Recharge', 'Internet', 'Rent', 'Medical', 'Shopping', 'Salary', 'Business Income', 'Other'];
+    let transactions = JSON.parse(localStorage.getItem('mm_tx_data')) || [];
+    let categories = JSON.parse(localStorage.getItem('mm_cats')) || DEFAULT_CATS;
+    let monthlyBudget = parseFloat(localStorage.getItem('mm_budget')) || 25000;
+    let activeType = 'expense';
+    let reportPeriod = 'monthly';
+    let catChart = null;
+    let trendChart = null;
+
+    window.onload = () => {
+      document.getElementById('txDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('settingBudgetInput').value = monthlyBudget;
+      updateDropdowns();
+      renderTags();
+      renderAll();
+    };
+
+    function formatINR(val) {
+      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(val);
+    }
+
+    function renderAll() {
+      saveStorage();
+      renderDashboard();
+      renderTransactionsList();
+      renderReports();
+    }
+
+    function saveStorage() {
+      localStorage.setItem('mm_tx_data', JSON.stringify(transactions));
+      localStorage.setItem('mm_cats', JSON.stringify(categories));
+      localStorage.setItem('mm_budget', monthlyBudget.toString());
+    }
+
+    function switchTab(tab) {
+      ['dashboard', 'transactions', 'reports', 'settings'].forEach(t => {
+        document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== tab);
+        const nav = document.getElementById(`nav-${t}`);
+        nav.className = t === tab ? 'text-teal-700 text-center w-1/4 font-bold' : 'text-slate-400 text-center w-1/4';
+      });
+      if (tab === 'reports') renderReports();
+    }
+
+    function renderDashboard() {
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      const curM = now.getMonth();
+      const curY = now.getFullYear();
+
+      document.getElementById('headerMonthText').innerText = now.toLocaleString('default', { month: 'long', year: 'numeric' });
+
+      let totInc = 0, totExp = 0, tInc = 0, tExp = 0, mInc = 0, mExp = 0;
+      transactions.forEach(t => {
+        const amt = parseFloat(t.amount) || 0;
+        const d = new Date(t.date);
+        if (t.type === 'income') {
+          totInc += amt;
+          if (t.date === today) tInc += amt;
+          if (d.getMonth() === curM && d.getFullYear() === curY) mInc += amt;
+        } else {
+          totExp += amt;
+          if (t.date === today) tExp += amt;
+          if (d.getMonth() === curM && d.getFullYear() === curY) mExp += amt;
+        }
+      });
+
+      document.getElementById('dashTotalBalance').innerText = formatINR(totInc - totExp);
+      document.getElementById('dashTodayIncome').innerText = formatINR(tInc);
+      document.getElementById('dashTodayExpense').innerText = formatINR(tExp);
+      document.getElementById('dashMonthSavings').innerText = formatINR(mInc - mExp);
+
+      // Budget check
+      document.getElementById('budgetSpent').innerText = formatINR(mExp);
+      document.getElementById('budgetTotal').innerText = formatINR(monthlyBudget);
+      const pct = monthlyBudget > 0 ? Math.round((mExp / monthlyBudget) * 100) : 0;
+      document.getElementById('budgetPctText').innerText = `${pct}%`;
+      const bar = document.getElementById('budgetBar');
+      bar.style.width = `${Math.min(pct, 100)}%`;
+      
+      const warn = document.getElementById('budgetWarning');
+      if (pct >= 100) {
+        bar.className = 'h-2 bg-rose-600 rounded-full transition-all';
+        warn.classList.remove('hidden');
+        warn.innerText = `Budget exceeded by ${formatINR(mExp - monthlyBudget)}!`;
+      } else if (pct >= 80) {
+        bar.className = 'h-2 bg-amber-500 rounded-full transition-all';
+        warn.classList.remove('hidden');
+        warn.innerText = `Warning: ${pct}% of monthly budget spent.`;
+      } else {
+        bar.className = 'h-2 bg-teal-600 rounded-full transition-all';
+        warn.classList.add('hidden');
+      }
+
+      // Recent 3
+      const recent = [...transactions].sort((a,b) => new Date(b.date) - new Date(a.date)).slice(0, 3);
+      const list = document.getElementById('dashRecentList');
+      if (!recent.length) {
+        list.innerHTML = `<div class="bg-white p-4 rounded-xl text-center text-xs text-slate-400">No transactions recorded. Tap "+ Add" above.</div>`;
+      } else {
+        list.innerHTML = recent.map(t => makeTxCard(t)).join('');
+      }
+    }
+
+    function makeTxCard(t) {
+      const isInc = t.type === 'income';
+      return `
+        <div class="bg-white p-3 rounded-xl border border-slate-100 flex items-center justify-between shadow-xs">
+          <div>
+            <p class="text-xs font-bold text-slate-800">${t.category}</p>
+            <p class="text-[10px] text-slate-400">${t.date} ${t.note ? '• ' + t.note : ''}</p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold ${isInc ? 'text-emerald-600' : 'text-slate-800'}">${isInc ? '+' : '-'} ${formatINR(t.amount)}</span>
+            <button onclick="editTx('${t.id}')" class="text-slate-400 p-1 text-xs"><i class="fa-solid fa-pen"></i></button>
+            <button onclick="deleteTx('${t.id}')" class="text-rose-400 p-1 text-xs"><i class="fa-solid fa-trash"></i></button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTransactionsList() {
+      const q = (document.getElementById('filterSearch').value || '').toLowerCase();
+      const cat = document.getElementById('filterCategory').value;
+      const d = document.getElementById('filterDate').value;
+
+      let list = [...transactions].filter(t => {
+        if (q && !((t.note || '').toLowerCase().includes(q) || t.amount.toString().includes(q) || t.category.toLowerCase().includes(q))) return false;
+        if (cat && t.category !== cat) return false;
+        if (d && t.date !== d) return false;
+        return true;
+      }).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+      const box = document.getElementById('fullTransactionsList');
+      if (!list.length) {
+        box.innerHTML = `<div class="bg-white p-4 rounded-xl text-center text-xs text-slate-400">No matching records.</div>`;
+      } else {
+        box.innerHTML = list.map(t => makeTxCard(t)).join('');
+      }
+    }
+
+    function setReportPeriod(p) {
+      reportPeriod = p;
+      ['daily', 'monthly', 'yearly'].forEach(k => {
+        document.getElementById(`btn-period-${k}`).className = (k === p)
+          ? 'flex-1 py-1 text-xs font-bold rounded-lg bg-white text-teal-800 shadow'
+          : 'flex-1 py-1 text-xs font-bold rounded-lg text-slate-600';
+      });
+      renderReports();
+    }
+
+    function renderReports() {
+      const now = new Date();
+      const today = now.toISOString().split('T')[0];
+      const curM = now.getMonth();
+      const curY = now.getFullYear();
+
+      let list = transactions.filter(t => {
+        const d = new Date(t.date);
+        if (reportPeriod === 'daily') return t.date === today;
+        if (reportPeriod === 'monthly') return d.getMonth() === curM && d.getFullYear() === curY;
+        if (reportPeriod === 'yearly') return d.getFullYear() === curY;
+        return true;
+      });
+
+      let inc = 0, exp = 0, catMap = {};
+      list.forEach(t => {
+        const a = parseFloat(t.amount) || 0;
+        if (t.type === 'income') {
+          inc += a;
+        } else {
+          exp += a;
+          catMap[t.category] = (catMap[t.category] || 0) + a;
+        }
+      });
+
+      document.getElementById('reportIncomeTotal').innerText = formatINR(inc);
+      document.getElementById('reportExpenseTotal').innerText = formatINR(exp);
+
+      // Doughnut
+      const ctx1 = document.getElementById('categoryChart').getContext('2d');
+      const emptyMsg = document.getElementById('chartEmpty');
+      if (catChart) catChart.destroy();
+
+      const labels = Object.keys(catMap);
+      if (!labels.length) {
+        emptyMsg.classList.remove('hidden');
+      } else {
+        emptyMsg.classList.add('hidden');
+        catChart = new Chart(ctx1, {
+          type: 'doughnut',
+          data: {
+            labels,
+            datasets: [{ data: Object.values(catMap), backgroundColor: ['#0d9488','#f59e0b','#3b82f6','#ec4899','#8b5cf6','#10b981'] }]
+          },
+          options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, font: { size: 9 } } } } }
+        });
+      }
+
+      // Bar
+      const ctx2 = document.getElementById('monthlyTrendChart').getContext('2d');
+      if (trendChart) trendChart.destroy();
+      const moInc = new Array(12).fill(0);
+      const moExp = new Array(12).fill(0);
+
+      transactions.forEach(t => {
+        const d = new Date(t.date);
+        if (d.getFullYear() === curY) {
+          const m = d.getMonth();
+          if (t.type === 'income') moInc[m] += parseFloat(t.amount) || 0;
+          else moExp[m] += parseFloat(t.amount) || 0;
+        }
+      });
+
+      trendChart = new Chart(ctx2, {
+        type: 'bar',
+        data: {
+          labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+          datasets: [
+            { label: 'Income', data: moInc, backgroundColor: '#10b981' },
+            { label: 'Expense', data: moExp, backgroundColor: '#f43f5e' }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { font: { size: 9 } } }, y: { ticks: { font: { size: 9 } } } } }
+      });
+    }
+
+    function openModal() {
+      document.getElementById('editTxId').value = '';
+      document.getElementById('txAmount').value = '';
+      document.getElementById('txNote').value = '';
+      document.getElementById('modalTitle').innerText = 'New Record';
+      setFormType('expense');
+      document.getElementById('txModal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('txModal').classList.add('hidden');
+    }
+
+    function setFormType(type) {
+      activeType = type;
+      document.getElementById('typeExp').className = type === 'expense' ? 'py-1.5 rounded-md text-xs font-bold bg-white text-rose-600 shadow' : 'py-1.5 rounded-md text-xs font-bold text-slate-600';
+      document.getElementById('typeInc').className = type === 'income' ? 'py-1.5 rounded-md text-xs font-bold bg-white text-emerald-600 shadow' : 'py-1.5 rounded-md text-xs font-bold text-slate-600';
+    }
+
+    function handleFormSubmit(e) {
+      e.preventDefault();
+      const id = document.getElementById('editTxId').value;
+      const amt = parseFloat(document.getElementById('txAmount').value);
+      const category = document.getElementById('txCategory').value;
+      const date = document.getElementById('txDate').value;
+      const note = document.getElementById('txNote').value.trim();
+
+      if (id) {
+        const idx = transactions.findIndex(t => t.id === id);
+        if (idx !== -1) transactions[idx] = { id, type: activeType, amount: amt, category, date, note };
+      } else {
+        transactions.unshift({ id: 'id_' + Date.now(), type: activeType, amount: amt, category, date, note });
+      }
+
+      closeModal();
+      renderAll();
+    }
+
+    function editTx(id) {
+      const t = transactions.find(x => x.id === id);
+      if (!t) return;
+      document.getElementById('editTxId').value = t.id;
+      document.getElementById('txAmount').value = t.amount;
+      document.getElementById('txCategory').value = t.category;
+      document.getElementById('txDate').value = t.date;
+      document.getElementById('txNote').value = t.note || '';
+      document.getElementById('modalTitle').innerText = 'Edit Record';
+      setFormType(t.type);
+      document.getElementById('txModal').classList.remove('hidden');
+    }
+
+    function deleteTx(id) {
+      if (confirm('Delete this item?')) {
+        transactions = transactions.filter(t => t.id !== id);
+        renderAll();
+      }
+    }
+
+    function updateDropdowns() {
+      const opts = categories.map(c => `<option value="${c}">${c}</option>`).join('');
+      document.getElementById('txCategory').innerHTML = opts;
+      document.getElementById('filterCategory').innerHTML = '<option value="">All Categories</option>' + opts;
+    }
+
+    function renderTags() {
+      document.getElementById('categoryTags').innerHTML = categories.map(c => `
+        <span class="inline-flex items-center text-[11px] bg-slate-100 border px-2 py-0.5 rounded-full text-slate-600">
+          ${c} ${!DEFAULT_CATS.includes(c) ? `<button onclick="removeCategory('${c}')" class="ml-1 text-rose-500 font-bold">&times;</button>` : ''}
+        </span>
+      `).join('');
+    }
+
+    function addCustomCategory() {
+      const input = document.getElementById('customCatInput');
+      const val = input.value.trim();
+      if (!val || categories.includes(val)) return;
+      categories.push(val);
+      input.value = '';
+      updateDropdowns();
+      renderTags();
+      saveStorage();
+    }
+
+    function removeCategory(cat) {
+      categories = categories.filter(c => c !== cat);
+      updateDropdowns();
+      renderTags();
+      saveStorage();
+    }
+
+    function saveBudget() {
+      monthlyBudget = parseFloat(document.getElementById('settingBudgetInput').value) || 0;
+      saveStorage();
+      renderDashboard();
+      alert('Budget updated!');
+    }
+
+    function exportCSV() {
+      if (!transactions.length) return alert('No data to export.');
+      let csv = 'ID,Type,Amount,Category,Date,Note\n';
+      transactions.forEach(t => { csv += `"${t.id}","${t.type}",${t.amount},"${t.category}","${t.date}","${t.note || ''}"\n`; });
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `MyMoney_${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+    }
+
+    function resetAllData() {
+      if (confirm('Erase all transactions?')) {
+        transactions = [];
+        renderAll();
+      }
+    }
+  </script>
+</body>
+</html>
