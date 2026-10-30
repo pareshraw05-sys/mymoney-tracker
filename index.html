@@ -237,7 +237,7 @@
     const DEFAULT_CATS = ['Grocery', 'Milk', 'Vegetables', 'Petrol', 'Diesel', 'Electricity', 'Water', 'Mobile Recharge', 'Internet', 'Rent', 'Medical', 'Shopping', 'Salary', 'Business Income', 'Other'];
     let transactions = JSON.parse(localStorage.getItem('mm_tx_data')) || [];
     let categories = JSON.parse(localStorage.getItem('mm_cats')) || DEFAULT_CATS;
-    let monthlyBudget = parseFloat(localStorage.getItem('mm_budget')) || 25000;
+    let monthlyBudget = parseFloat(localStorage.getItem('mm_budget')) || 100000;
     let activeType = 'expense';
     let reportPeriod = 'monthly';
     let catChart = null;
