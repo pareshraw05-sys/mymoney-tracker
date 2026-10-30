@@ -161,6 +161,17 @@
         </div>
         <div id="categoryTags" class="flex flex-wrap gap-1 pt-1"></div>
       </div>
+      <!-- Language Settings -->
+<div class="bg-white rounded-xl p-3 border border-slate-100 space-y-2">
+  <h3 class="text-xs font-bold text-slate-700">Select Language / ભાષા પસંદ કરો</h3>
+  <select id="languageSelect"
+    onchange="changeLanguage(this.value)"
+    class="w-full text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg">
+    <option value="en">English</option>
+    <option value="gu">ગુજરાતી</option>
+    <option value="hi">हिन्दी</option>
+  </select>
+</div>
 
       <!-- Export Data -->
       <div class="bg-white rounded-xl p-3 border border-slate-100 space-y-2">
@@ -573,10 +584,220 @@
         transactions = [];
         renderAll();
       }
+    }// LANGUAGE SETTINGS
+const languageTranslations = {
+  gu: {
+    "Overview":"ઝાંખી",
+    "Add":"ઉમેરો",
+    "Net Balance":"કુલ બાકી રકમ",
+    "Today's Income":"આજની આવક",
+    "Today's Expense":"આજનો ખર્ચ",
+    "This Month's Savings":"આ મહિનાની બચત",
+    "Monthly Budget":"માસિક બજેટ",
+    "Spent:":"ખર્ચ:",
+    "Limit:":"મર્યાદા:",
+    "Recent Transactions":"તાજેતરના વ્યવહારો",
+    "See All":"બધા જુઓ",
+    "Search notes or amounts...":"નોંધ અથવા રકમ શોધો...",
+    "All Categories":"બધી કેટેગરી",
+    "Daily":"દૈનિક",
+    "Monthly":"માસિક",
+    "Yearly":"વાર્ષિક",
+    "Income":"આવક",
+    "Expense":"ખર્ચ",
+    "Category Spending Breakdown":"કેટેગરી પ્રમાણે ખર્ચ",
+    "No expense records found.":"ખર્ચનો કોઈ રેકોર્ડ મળ્યો નથી.",
+    "Annual Trend":"વાર્ષિક રિપોર્ટ",
+    "Set Monthly Budget (₹)":"માસિક બજેટ સેટ કરો (₹)",
+    "Save":"સેવ કરો",
+    "Add Custom Category":"નવી કેટેગરી ઉમેરો",
+    "e.g. Snacks, EMI":"દા.ત. નાસ્તો, EMI",
+    "Backup & Reset":"બેકઅપ અને રીસેટ",
+    "Export to CSV":"CSVમાં ડાઉનલોડ કરો",
+    "Erase All Data":"બધો ડેટા કાઢી નાખો",
+    "Home":"હોમ",
+    "History":"હિસાબ",
+    "Reports":"રિપોર્ટ",
+    "Settings":"સેટિંગ્સ",
+    "New Record":"નવી એન્ટ્રી",
+    "Amount (₹)":"રકમ (₹)",
+    "Category":"કેટેગરી",
+    "Date":"તારીખ",
+    "Description / Note":"વિગત / નોંધ",
+    "e.g. Dinner, Fuel":"દા.ત. જમવાનું, પેટ્રોલ",
+    "No matching records.":"કોઈ મેળ ખાતો રેકોર્ડ નથી.",
+    "No transactions recorded. Tap \"+ Add\" above.":"કોઈ વ્યવહાર નોંધાયો નથી. ઉપર ઉમેરો દબાવો.",
+    "Grocery":"કરિયાણું",
+    "Milk":"દૂધ",
+    "Vegetables":"શાકભાજી",
+    "Petrol":"પેટ્રોલ",
+    "Diesel":"ડીઝલ",
+    "Electricity":"વીજળી",
+    "Water":"પાણી",
+    "Mobile Recharge":"મોબાઇલ રિચાર્જ",
+    "Internet":"ઇન્ટરનેટ",
+    "Rent":"ભાડું",
+    "Medical":"દવા",
+    "Shopping":"ખરીદી",
+    "Salary":"પગાર",
+    "Business Income":"વ્યવસાયની આવક",
+    "Other":"અન્ય",
+    "Budget updated!":"બજેટ અપડેટ થયું!",
+    "No data to export.":"ડાઉનલોડ કરવા ડેટા નથી.",
+    "Erase all transactions?":"બધા વ્યવહારો કાઢી નાખવા છે?",
+    "Delete this item?":"આ એન્ટ્રી કાઢી નાખવી છે?",
+    "Edit Record":"એન્ટ્રી સુધારો",
+    "Select Language / ભાષા પસંદ કરો":"ભાષા પસંદ કરો"
+  },
+
+  hi: {
+    "Overview":"अवलोकन",
+    "Add":"जोड़ें",
+    "Net Balance":"कुल शेष राशि",
+    "Today's Income":"आज की आय",
+    "Today's Expense":"आज का खर्च",
+    "This Month's Savings":"इस महीने की बचत",
+    "Monthly Budget":"मासिक बजट",
+    "Spent:":"खर्च:",
+    "Limit:":"सीमा:",
+    "Recent Transactions":"हाल के लेन-देन",
+    "See All":"सभी देखें",
+    "Search notes or amounts...":"नोट या राशि खोजें...",
+    "All Categories":"सभी श्रेणियाँ",
+    "Daily":"दैनिक",
+    "Monthly":"मासिक",
+    "Yearly":"वार्षिक",
+    "Income":"आय",
+    "Expense":"खर्च",
+    "Category Spending Breakdown":"श्रेणी के अनुसार खर्च",
+    "No expense records found.":"खर्च का कोई रिकॉर्ड नहीं मिला।",
+    "Annual Trend":"वार्षिक रिपोर्ट",
+    "Set Monthly Budget (₹)":"मासिक बजट सेट करें (₹)",
+    "Save":"सेव करें",
+    "Add Custom Category":"नई श्रेणी जोड़ें",
+    "e.g. Snacks, EMI":"जैसे स्नैक्स, EMI",
+    "Backup & Reset":"बैकअप और रीसेट",
+    "Export to CSV":"CSV डाउनलोड करें",
+    "Erase All Data":"सारा डेटा मिटाएं",
+    "Home":"होम",
+    "History":"इतिहास",
+    "Reports":"रिपोर्ट",
+    "Settings":"सेटिंग्स",
+    "New Record":"नई एंट्री",
+    "Amount (₹)":"राशि (₹)",
+    "Category":"श्रेणी",
+    "Date":"तारीख",
+    "Description / Note":"विवरण / नोट",
+    "e.g. Dinner, Fuel":"जैसे रात का खाना, ईंधन",
+    "No matching records.":"कोई रिकॉर्ड नहीं मिला।",
+    "No transactions recorded. Tap \"+ Add\" above.":"कोई लेन-देन दर्ज नहीं है। ऊपर जोड़ें दबाएं।",
+    "Grocery":"किराना",
+    "Milk":"दूध",
+    "Vegetables":"सब्जियां",
+    "Petrol":"पेट्रोल",
+    "Diesel":"डीजल",
+    "Electricity":"बिजली",
+    "Water":"पानी",
+    "Mobile Recharge":"मोबाइल रिचार्ज",
+    "Internet":"इंटरनेट",
+    "Rent":"किराया",
+    "Medical":"दवा",
+    "Shopping":"खरीदारी",
+    "Salary":"वेतन",
+    "Business Income":"व्यापार की आय",
+    "Other":"अन्य",
+    "Budget updated!":"बजट अपडेट हो गया!",
+    "No data to export.":"डाउनलोड करने के लिए डेटा नहीं है।",
+    "Erase all transactions?":"क्या सभी लेन-देन मिटाने हैं?",
+    "Delete this item?":"क्या यह एंट्री मिटानी है?",
+    "Edit Record":"एंट्री संपादित करें",
+    "Select Language / ભાષા પસંદ કરો":"भाषा चुनें"
+  }
+};
+
+let currentLanguage = localStorage.getItem('mm_language') || 'en';
+
+function translateUIText(text) {
+  const dict = languageTranslations[currentLanguage] || {};
+  if (dict[text]) return dict[text];
+
+  if (currentLanguage === 'gu') {
+    let m = text.match(/^Budget exceeded by (.+)!$/);
+    if (m) return `બજેટ કરતાં ${m[1]} વધુ ખર્ચ થયો!`;
+    m = text.match(/^Warning: (.+) of monthly budget spent\\.$/);
+    if (m) return `ચેતવણી: માસિક બજેટનો ${m[1]} ખર્ચ થયો.`;
+  }
+
+  if (currentLanguage === 'hi') {
+    let m = text.match(/^Budget exceeded by (.+)!$/);
+    if (m) return `बजट से ${m[1]} अधिक खर्च हुआ!`;
+    m = text.match(/^Warning: (.+) of monthly budget spent\\.$/);
+    if (m) return `चेतावनी: मासिक बजट का ${m[1]} खर्च हुआ।`;
+  }
+
+  return text;
+}
+
+function applyLanguage() {
+  const walker = document.createTreeWalker(
+    document.body,
+    NodeFilter.SHOW_TEXT
+  );
+
+  let node;
+
+  while (node = walker.nextNode()) {
+    if (['SCRIPT', 'STYLE'].includes(node.parentElement?.tagName)) continue;
+
+    if (node.__originalText === undefined) {
+      node.__originalText = node.nodeValue;
     }
-  </script><div style="text-align:center; padding:20px;">
-  
-  </a>
-  </div>
+
+    const original = node.__originalText;
+    const trimmed = original.trim();
+
+    if (!trimmed) continue;
+
+    const translated = translateUIText(trimmed);
+    node.nodeValue = original.replace(trimmed, translated);
+  }
+
+  document.querySelectorAll('[placeholder]').forEach(el => {
+    if (el.dataset.originalPlaceholder === undefined) {
+      el.dataset.originalPlaceholder = el.getAttribute('placeholder');
+    }
+    el.setAttribute(
+      'placeholder',
+      translateUIText(el.dataset.originalPlaceholder)
+    );
+  });
+}
+
+function changeLanguage(lang) {
+  currentLanguage = ['en', 'gu', 'hi'].includes(lang) ? lang : 'en';
+
+  localStorage.setItem('mm_language', currentLanguage);
+
+  const select = document.getElementById('languageSelect');
+  if (select) select.value = currentLanguage;
+
+  applyLanguage();
+
+  if (typeof renderReports === 'function') {
+    renderReports();
+  }
+}
+
+const languageObserver = new MutationObserver(() => {
+  applyLanguage();
+});
+
+languageObserver.observe(document.body, {
+  childList: true,
+  subtree: true
+});
+
+changeLanguage(currentLanguage);
+</script>
 </body>
 </html>
